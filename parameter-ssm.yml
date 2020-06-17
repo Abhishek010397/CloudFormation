@@ -1,0 +1,20 @@
+---
+Parameters:
+  InstanceType:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: /EC2/InstanceType
+  ImageID:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: /EC2/AMI_ID
+  AvailabilityZone:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::AvailabilityZone::Name>'
+    Default: /EC2/AZ
+
+Resources:
+  MyInstanceWithParameters:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageID
+      InstanceType: !Ref InstanceType
+      AvailabilityZone: !Ref AvailabilityZone
+   
