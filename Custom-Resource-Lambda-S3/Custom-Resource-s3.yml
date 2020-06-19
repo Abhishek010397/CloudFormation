@@ -1,0 +1,10 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  myBucketResource:
+    Type: AWS::S3::Bucket
+  LambdaUseToCleanUp:
+    Type: Custom::cleanupbucket
+    Properties:
+      ServiceToken: !ImportValue EmptyBucketS3Lambda
+      BucketName: !Ref myBucketResource
