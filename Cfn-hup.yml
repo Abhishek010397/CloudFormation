@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation Template for CFN-Init
+Parameters:
+  KeyName:
+    Description: Name of an existing KeyPair for SSH
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing KeyPair
+
+  LatestLinuxAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+
+  WelcomeMessage:
+    Type: String
+    Default: "Hello World"
+
+Resources:
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP access via port 80 & SSH via port 22
+      SecurityGroupIngress:
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: '80'
+        ToPort: '80'
+
+  WebServerHost:
+    Type: AWS::EC2::Instance
+    Metadata:
+      Comment: Install a PHP Application
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              httpd: []
+              php: []
+          groups:
+            apache: {}
+          users:
+            "apache":
+              groups: 
+                - "apache"
+          sources: 
+            "/home/ec2-user/aws-cli": "https://github.com/aws/aws-cli/tarball/master"
+          files:
+            "/var/www/html/index.html":
+              content: !Sub |
+                <h1>${WelcomeMessage} from ${AWS::StackName}</h1>
+              mode: '000644'
+              owner: apache
+              group: apache
+            "/etc/cfn/cfn-hup.conf":
+              content: !Sub |
+                [main]
+                stack = ${AWS::StackId}
+                region = ${AWS::Region}
+                interval=2
+              mode: "00400"
+              owner: "root"
+              group: "root"
+              # the user actions that the cfn-huo daemon calls periodically are defined in the hooks.conf configuration file.
+              #to support composition of several applications deploying change notification hooks, cfn-huo supports a directory named hook.d,
+              #located in the hooks configuration directory. We can place one or more additional hooks configuration files in the hooks.d directory.
+              # The additional hooks files must be of the same layout as the hooks.conf file.
+            "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers = post.update
+                path = resources.WebServerHost.Metadata.AWS::CloudFormation::Init 
+                action = /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource WebServerHost --region ${AWS::Region}
+              mode: "000400"
+              owner: "root"
+              group: "root"
+          services:
+            sysvinit:
+              httpd:
+                enabled: 'true'
+                ensureRunning: 'true'
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+    Properties:
+      ImageId: !Ref LatestLinuxAmiId
+      KeyName: !Ref KeyName
+      InstanceType: t2.micro
+      SecurityGroups:
+        - !Ref WebServerSecurityGroup    
+      UserData:
+        "Fn::Base64":
+           !Sub |
+             #!/bin/bash -xe
+             yum update -y aws-cfn-bootstrap
+             /opt/aws/bin/cfn-init -s ${AWS::StackId} -r WebServerHost --region ${AWS::Region} || error_exit 'Failed to run cfn-init'
+             /opt/aws/bin/cfn-hup || error_exit 'Failed to start cfn-hup'
+             /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WebServerHost --region ${AWS::Region}
+
+Outputs:
+  InstanceId:
+    Description: the instance id of the webserver
+    Value:
+      Ref: WebServerHost
+  WebsiteURL:
+    Value:
+      !Sub 'http://${WebServerHost.PublicDnsName}'
+    Description: URL for the newly created LAMP Stack
+  PublicIp:
+    Description: the public ip of the Webserver
+    Value:
+      !GetAtt WebServerHost.PublicIp
+
+
+  
+              
+               
