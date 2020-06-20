@@ -1,3 +1,6 @@
+# the advantage of using cfn-hup is that when we change our WelcomeMessage to something else and do an update of our stack, 
+#the EC2 instance doesn't get shutdown i.e no new instances will be launched the previous one gets updated, 
+#thereby only metadata gets updated and nothing much!
 AWSTemplateFormatVersion: '2010-09-09'
 Description: AWS CloudFormation Template for CFN-Init
 Parameters:
