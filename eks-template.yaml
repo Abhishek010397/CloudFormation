@@ -87,9 +87,23 @@
          Default: "arn:ans:iam::acct_no:role/NodelnstanceRole" 
          Description: "IAM Role for EKS Nodes" 
 
+    EKSPublicAccessEndpoint:
+         Type: String
+         AllowedValues: [Enabled, Disabled]
+         Default: Disabled
+
+    EKSPrivateAccessEndpoint:
+         Type: String
+         AllowedValues: [Enabled, Disabled]
+         Default: Enabled 
+
+  Conditions:
+        EnablePrivateEndpoint: !Equals [ !Ref EKSPrivateAccessEndpoint, "Enabled" ]
+        EnablePublicEndpoint: !Equals [ !Ref EKSPublicAccessEndpoint, "Disabled" ]
+
   Resources: 
        eksCluster: 
-       Type: AWS::EKS::Cluster 
+       Type: AWSQS::EKS::Cluster 
        Properties: 
            Name: !Ref EKSClusterName 
            Version: !Ref EKSVersion 
@@ -103,6 +117,8 @@
                      - !Ref Subnet1 
                      - !Ref Subnet2 
                      - !Ref Subnet3
+                EndpointPrivateAccess: !If [ EnablePrivateEndpoint, true, false ]
+                EndpointPublicAccess: !If [ EnablePublicEndpoint, true, false ]
 
        eksNodeGroup: 
             Type: AWS::EKS::Noclegroup 
