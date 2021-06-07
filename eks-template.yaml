@@ -99,7 +99,7 @@
 
   Conditions:
         EnablePrivateEndpoint: !Equals [ !Ref EKSPrivateAccessEndpoint, "Enabled" ]
-        EnablePublicEndpoint: !Equals [ !Ref EKSPublicAccessEndpoint, "Disabled" ]
+        EnablePublicEndpoint: !Equals [ !Ref EKSPublicAccessEndpoint, "Enabled" ]
 
   Resources: 
        eksCluster: 
