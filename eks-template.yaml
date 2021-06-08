@@ -1,6 +1,8 @@
 ---
   AWSTemplateFormatVersion: '2010-09-09'
-  
+  Metadata:
+    QSLint:
+      Exclusions: [W9002, W9003, W9004, W9006]
   Parameters:
     EKSClusterName:
       Type: String
@@ -44,7 +46,7 @@
   
     EKSIAMRoleName:
       Type: String
-      Default: "arn:aws:iam::acct_no:role/eksClusterRole"
+      Default: "arn:aws:iam::680763698946:role/eks-cluster"
       Description: The name of the IAM role for the EKS service to assume.
     
     EKSKeyPair:
@@ -54,37 +56,37 @@
     
     Subnet1: 
          Type: String 
-         Default: "subnet-id" 
+         Default: "subnet-0c45b1f5ee2ce5013" 
          Description: "First Private Subnet" 
 
     Subnet2: 
          Type: String 
-         Default: "subnet-id" 
+         Default: "subnet-0c12dd4bd533213a7" 
          Description: "Second Private Subnet" 
 
     Subnet3: 
          Type: String 
-         Default: "subnet-id" 
+         Default: "subnet-751ca67b" 
          Description: "Third Private Subnet" 
 
-    ekssecurityGroup1: 
+    eksSecurityGroup1: 
          Type: String 
-         Default: "sg-id" 
+         Default: "sg-0160c3568280889ad" 
          Description: "SecurityGroups" 
 
     eksSecurityGroup2: 
          Type: String 
-         Default: "sg-id" 
+         Default: "sg-030992e75f8a99e86" 
          Description: "SecurityGroups" 
 
     eksSecurityGroup3: 
           Type: String 
-          Default: "sg-id" 
+          Default: "sg-05252192c90b9f732" 
           Description: "SecurityGroups" 
 
     eksNodeInstanceRole: 
          Type: String 
-         Default: "arn:ans:iam::acct_no:role/NodelnstanceRole" 
+         Default: "arn:ans:iam::acct_no:role/NodeInstanceRole" 
          Description: "IAM Role for EKS Nodes" 
 
     EKSPublicAccessEndpoint:
@@ -102,49 +104,51 @@
         EnablePublicEndpoint: !Equals [ !Ref EKSPublicAccessEndpoint, "Enabled" ]
 
   Resources: 
-       eksCluster: 
-       Type: AWSQS::EKS::Cluster 
-       Properties: 
-           Name: !Ref EKSClusterName 
-           Version: !Ref EKSVersion 
-           RoleArn: !Ref EKSIAMRoleARN 
-           ResourcesVpcConfig: 
-                SecurityGroupids: 
-                     - !Ref eksSecurityGroup1 
-                     - !Ref eksSecurityGroup2 
-                     - !Ref eksSecurityGroup3 
-                Subnetlds: 
-                     - !Ref Subnet1 
-                     - !Ref Subnet2 
-                     - !Ref Subnet3
-                EndpointPrivateAccess: !If [ EnablePrivateEndpoint, true, false ]
-                EndpointPublicAccess: !If [ EnablePublicEndpoint, true, false ]
+    EKS: 
+      Type: "AWSQS::EKS::Cluster" 
+      Properties: 
+        Name: !Ref EKSClusterName 
+        Version: !Ref EKSVersion 
+        RoleArn: !Ref EKSIAMRoleName 
+        ResourcesVpcConfig: 
+          SecurityGroupids: 
+            - !Ref eksSecurityGroup1 
+            - !Ref eksSecurityGroup2 
+            - !Ref eksSecurityGroup3 
+          Subnetlds: 
+            - !Ref Subnet1 
+            - !Ref Subnet2 
+            - !Ref Subnet3
+          EndpointPrivateAccess: !If [ EnablePrivateEndpoint, true, false ]
+          EndpointPublicAccess: !If [ EnablePublicEndpoint, true, false ]
 
-       eksNodeGroup: 
-            Type: AWS::EKS::Noclegroup 
-            Properties: 
-                CapacityType: ON_DEMAND 
-                ClusterName: !Ref EKSClusterName 
-                NodeRole: 
-                      !Ref eksNodelnstanceRole 
-                AmiType: AL2_x86_64 
-                InstanceTypes: 
-                    - !Ref EKSWorkerNodeInstanceType 
-                NodegroupName: !Ref EKSNodeGroupName 
-                RemoteAccess: 
-                     Ec2SshKey: !Ref EKSKeyPair 
-                     SourceSecurityGroups: 
-                          - !Ref eksSecurityGroup1 
-                          - !Ref eksSecurityGroup2 
-                          - !Ref eksSecurityGroup3 
-                ScalingConfig: 
-                    MinSize: 1 
-                    DesiredSize: !Ref EKSDesiredWorkerNode 
-                    MaxSize: 7 
-                Subnets: 
-                     - !Ref Subnet1 
-                     - !Ref Subnet2 
-                     - !Ref Subnet3 
-            Dependson: [eksCluster]
+    eksNodeGroup: 
+      Type: AWS::EKS::Nodegroup 
+      Properties: 
+        CapacityType: ON_DEMAND 
+        ClusterName: !Ref EKSClusterName 
+        NodeRole: 
+          !Ref eksNodeInstanceRole 
+        AmiType: AL2_x86_64 
+        InstanceTypes: 
+          - !Ref EKSWorkerNodeInstanceType 
+        NodegroupName: !Ref EKSNodeGroupName 
+        RemoteAccess: 
+          Ec2SshKey: !Ref EKSKeyPair 
+          SourceSecurityGroups: 
+            - !Ref eksSecurityGroup1 
+            - !Ref eksSecurityGroup2 
+            - !Ref eksSecurityGroup3 
+        ScalingConfig: 
+          MinSize: 1 
+          DesiredSize: !Ref EKSDesiredWorkerNode 
+          MaxSize: 7 
+        Subnets: 
+          - !Ref Subnet1 
+          - !Ref Subnet2 
+          - !Ref Subnet3 
+      DependsOn: [EKS]
+
+
 
 
