@@ -1,0 +1,75 @@
+---
+  AWSTemplateFormatVersion: '2010-09-09'
+  Parameters:
+    EKSClusterName:
+      Type: String
+      Default: EKS
+      Description: The desired name of your AWS EKS Cluster.
+    
+    EKSVersion:
+      Type: String
+      Default: 1.18
+      AllowedValues: 
+        - 1.16
+        - 1.17
+        - 1.18
+      Description: The desired version of your AWS EKS Cluster.
+    
+    EKSIAMRoleName:
+      Type: String
+      Default: "arn:aws:iam::680763698946:role/eks-cluster"
+      Description: The name of the IAM role for the EKS service to assume.
+
+    Subnet1: 
+      Type: String 
+      Default: "subnet-id" 
+      Description: "First Private Subnet" 
+
+    Subnet2: 
+      Type: String 
+      Default: "subnet-id" 
+      Description: "Second Private Subnet" 
+
+    Subnet3: 
+         Type: String 
+         Default: "subnet-id" 
+         Description: "Third Private Subnet" 
+
+    eksSecurityGroup1: 
+      Type: String 
+      Default: "sg-id" 
+      Description: "SecurityGroups" 
+
+    eksSecurityGroup2: 
+      Type: String 
+      Default: "sg-id" 
+      Description: "SecurityGroups" 
+
+    eksSecurityGroup3: 
+      Type: String 
+      Default: "sg-id" 
+      Description: "SecurityGroups" 
+
+  Resources: 
+    EKS: 
+      Type: AWS::EKS::Cluster 
+      Properties: 
+        Name: !Ref EKSClusterName 
+        Version: !Ref EKSVersion 
+        RoleArn: !Ref EKSIAMRoleName 
+        ResourcesVpcConfig: 
+          SecurityGroupIds: 
+            - !Ref eksSecurityGroup1 
+            - !Ref eksSecurityGroup2 
+            - !Ref eksSecurityGroup3 
+          SubnetIds: 
+            - !Ref Subnet1 
+            - !Ref Subnet2 
+            - !Ref Subnet3
+
+
+
+
+
+
+

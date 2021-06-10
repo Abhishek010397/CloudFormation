@@ -1,0 +1,100 @@
+---
+  AWSTemplateFormatVersion: '2010-09-09'
+  Parameters:
+    EKSClusterName:
+      Type: String
+      Default: EKS
+      Description: The desired name of your AWS EKS Cluster.
+
+    eksNodeInstanceRole: 
+      Type: String 
+      Default: "arn:ans:iam::acct_no:role/NodeInstanceRole" 
+      Description: IAM Role for EKS Nodes 
+
+    EKSWorkerNodeInstanceType:
+      Type: String
+      Default: t2.micro
+      AllowedValues: [t2.nano, t2.micro, t2.small, t2.medium, t2.large, t2.xlarge, t2.2xlarge,
+        t3.nano, t3.micro, t3.small, t3.medium, t3.large, t3.xlarge, t3.2xlarge,
+        m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge,
+        m5.large, m5.xlarge, m5.2xlarge, m5.4xlarge,
+        c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge,
+        g3.8xlarge,r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r3.12xlarge,
+        i3.xlarge, i3.2xlarge, i3.4xlarge, i3.8xlarge,
+        d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge]
+      ConstraintDescription: Must be a valid EC2 instance type
+      Description: EC2 instance type for the node instances.
+
+    EKSNodeGroupName:
+      Type: String
+      Default: NodeGroup01
+      Description: The desired name of your AWS EKS Node Group.
+
+    EKSKeyPair:
+      Type: String
+      Default: "my-eks-key"
+      Description: The name of Key Pair to etasblish connection with Worker Node.
+
+    eksSecurityGroup1: 
+      Type: String 
+      Default: "sg-id" 
+      Description: "SecurityGroups" 
+
+    eksSecurityGroup2: 
+      Type: String 
+      Default: "sg-id" 
+      Description: "SecurityGroups" 
+
+    eksSecurityGroup3: 
+      Type: String 
+      Default: "sg-id" 
+      Description: "SecurityGroups" 
+
+    EKSDesiredWorkerNode:
+      Type: Number
+      Default: 2
+      Description: Number of desired Worker Node.
+      MinValue: 1
+      MaxValue: 7
+
+    Subnet1: 
+      Type: String 
+      Default: "subnet-id" 
+      Description: "First Private Subnet" 
+
+    Subnet2: 
+      Type: String 
+      Default: "subnet-id" 
+      Description: "Second Private Subnet" 
+
+    Subnet3: 
+      Type: String 
+      Default: "subnet-id" 
+      Description: "Third Private Subnet" 
+
+  Resources:
+    eksNodeGroup: 
+      Type: AWS::EKS::Nodegroup 
+      Properties: 
+        CapacityType: ON_DEMAND 
+        ClusterName: !Ref EKSClusterName 
+        NodeRole: 
+          !Ref eksNodeInstanceRole 
+        AmiType: AL2_x86_64 
+        InstanceTypes: 
+          - !Ref EKSWorkerNodeInstanceType 
+        NodegroupName: !Ref EKSNodeGroupName 
+        RemoteAccess: 
+          Ec2SshKey: !Ref EKSKeyPair 
+          SourceSecurityGroups: 
+            - !Ref eksSecurityGroup1 
+            - !Ref eksSecurityGroup2 
+            - !Ref eksSecurityGroup3 
+        ScalingConfig: 
+          MinSize: 1 
+          DesiredSize: !Ref EKSDesiredWorkerNode 
+          MaxSize: 7 
+        Subnets: 
+          - !Ref Subnet1 
+          - !Ref Subnet2 
+          - !Ref Subnet3 
